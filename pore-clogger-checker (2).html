@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pore-Clogger Checker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf9f7; --surface: #ffffff; --surface-2: #f3f1ee;
+      --border: #e4e1db; --border-strong: #c9c5bc;
+      --text: #1a1917; --text-secondary: #6b6860; --text-muted: #9e9b95;
+      --accent: #2563eb; --accent-bg: #eff6ff; --accent-border: #bfdbfe; --accent-text: #1d4ed8;
+      --danger-bg: #fef2f2; --danger-border: #fecaca; --danger-text: #b91c1c;
+      --success: #16a34a; --success-bg: #f0fdf4; --success-border: #bbf7d0; --success-text: #15803d;
+      --warning-bg: #fffbeb; --warning-border: #fde68a; --warning-text: #92400e;
+      --radius: 8px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem 4rem; }
+    .container { max-width: 660px; margin: 0 auto; }
+
+    header { margin-bottom: 2rem; }
+    .logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+    .logo-icon { width: 36px; height: 36px; background: var(--accent-bg); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--accent); flex-shrink: 0; }
+    header h1 { font-size: 21px; font-weight: 700; }
+    header p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-top: 2px; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.4rem; margin-bottom: 1rem; }
+    .field-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 9px; }
+
+    .type-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 1.3rem; }
+    .type-btn { font-size: 12px; padding: 5px 14px; border: 1px solid var(--border-strong); border-radius: 20px; background: var(--surface-2); color: var(--text-secondary); cursor: pointer; transition: all 0.12s; font-family: inherit; line-height: 1.4; }
+    .type-btn:hover { border-color: var(--accent); color: var(--accent-text); background: var(--accent-bg); }
+    .type-btn.active { background: var(--accent-bg); color: var(--accent-text); border-color: var(--accent-border); font-weight: 600; }
+
+    textarea { width: 100%; min-height: 120px; resize: vertical; font-size: 13px; font-family: inherit; border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; background: var(--surface-2); color: var(--text); line-height: 1.65; transition: border-color 0.15s, background 0.15s; }
+    textarea:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+    textarea::placeholder { color: var(--text-muted); }
+
+    .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+    .check-btn { flex: 1; padding: 11px; font-size: 14px; font-weight: 600; font-family: inherit; border: none; border-radius: var(--radius); background: var(--accent); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: opacity 0.12s; }
+    .check-btn:hover { opacity: 0.88; }
+    .clear-btn { padding: 11px 16px; font-size: 13px; font-family: inherit; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); color: var(--text-secondary); cursor: pointer; transition: all 0.12s; }
+    .clear-btn:hover { color: var(--text); }
+
+    #resultsSection { display: none; }
+    .alert { padding: 13px 15px; border-radius: var(--radius); font-size: 13px; line-height: 1.6; margin-bottom: 1rem; }
+    .alert-header { display: flex; align-items: flex-start; gap: 9px; }
+    .alert-header svg { flex-shrink: 0; margin-top: 1px; }
+    .alert-danger { background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger-text); }
+    .alert-success { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success-text); }
+
+    .flag-count { font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+    .flag-list { list-style: none; }
+    .flag-item { display: flex; align-items: flex-start; gap: 9px; padding: 9px 0; border-bottom: 1px solid var(--danger-border); }
+    .flag-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .flag-x { color: var(--danger-text); flex-shrink: 0; margin-top: 2px; }
+    .flag-name { font-weight: 600; font-size: 13px; color: var(--danger-text); }
+    .flag-as { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-style: italic; }
+    .flag-note { font-size: 12px; color: var(--text-secondary); margin-top: 3px; line-height: 1.5; }
+
+    .section-header { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin: 0 0 8px; }
+    .alt-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 10px; }
+    .alt-item { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 9px; }
+    .alt-item:last-child { border-bottom: none; }
+    .alt-check { color: var(--success); flex-shrink: 0; margin-top: 2px; }
+    .alt-name { font-size: 13px; font-weight: 600; color: var(--text); }
+
+    .tip-box { background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: var(--radius); padding: 11px 13px; font-size: 12px; color: var(--warning-text); line-height: 1.6; display: flex; gap: 8px; align-items: flex-start; margin-bottom: 1rem; }
+    .tip-box svg { flex-shrink: 0; margin-top: 1px; }
+    .source-note { font-size: 11px; color: var(--text-muted); margin-bottom: 1rem; }
+    .source-note a { color: var(--accent-text); text-decoration: none; }
+    .source-note a:hover { text-decoration: underline; }
+    .no-type-note { font-size: 12px; color: var(--text-muted); margin-bottom: 1rem; padding: 10px 13px; background: var(--surface-2); border-radius: var(--radius); border: 1px solid var(--border); }
+
+    footer { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 2.5rem; line-height: 1.8; }
+    footer a { color: var(--accent-text); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo-row">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+      </div>
+      <h1>Pore-Clogger Checker</h1>
+    </div>
+    <p>Paste any product's ingredient list to instantly check for comedogenic ingredients. Select a product type to see acne-safe alternatives.</p>
+  </header>
+
+  <div class="card">
+    <div class="field-label">Product type <span style="font-weight:400;text-transform:none;font-size:11px">(optional — shows alternatives)</span></div>
+    <div class="type-row" id="typeRow">
+      <button class="type-btn" onclick="setType(this,'Blush')">Blush</button>
+      <button class="type-btn" onclick="setType(this,'Bronzer')">Bronzer</button>
+      <button class="type-btn" onclick="setType(this,'Concealer')">Concealer</button>
+      <button class="type-btn" onclick="setType(this,'Foundation (liquid)')">Foundation</button>
+      <button class="type-btn" onclick="setType(this,'Primer')">Primer</button>
+      <button class="type-btn" onclick="setType(this,'Setting powder')">Setting powder</button>
+      <button class="type-btn" onclick="setType(this,'Setting spray')">Setting spray</button>
+      <button class="type-btn" onclick="setType(this,'Highlighter')">Highlighter</button>
+      <button class="type-btn" onclick="setType(this,'Shampoo')">Shampoo</button>
+      <button class="type-btn" onclick="setType(this,'Conditioner')">Conditioner</button>
+      <button class="type-btn" onclick="setType(this,'Dry shampoo')">Dry shampoo</button>
+      <button class="type-btn" onclick="setType(this,'Hair styling')">Hair styling</button>
+    </div>
+
+    <div class="field-label">Ingredient list</div>
+    <textarea id="ingInput" placeholder="Paste the full ingredient list here — comma-separated or one per line.&#10;&#10;Example: Water, Glycerin, Shea Butter, Dimethicone, Sodium Lauryl Sulfate…"></textarea>
+
+    <div class="btn-row">
+      <button class="check-btn" onclick="runCheck()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Check ingredients
+      </button>
+      <button class="clear-btn" onclick="clearAll()">Clear</button>
+    </div>
+  </div>
+
+  <div id="resultsSection"></div>
+
+  <footer>
+    Pore-clogging list: <a href="https://facerealityskincare.com/pages/pore-clogging-ingredients" target="_blank">Face Reality Skincare</a><br>
+    Acne-safe alternatives: <a href="https://emmediane.com/blogs/skin-tips/acne-safe-makeup-list" target="_blank">Emme Diane</a> &amp; <a href="https://emmediane.com/blogs/skin-tips/acne-safe-hair-care" target="_blank">Emme Diane Hair Care</a><br>
+    Always verify ingredients before use — formulas can change.
+  </footer>
+</div>
+
+<script>
+// ── PORE-CLOGGING DATABASE (Face Reality Skincare) ───────────────────────────
+const PORE_CLOGGERS = {
+  "Acetylated Lanolin":"Highly comedogenic lanolin derivative",
+  "Acetylated Lanolin Alcohol":"Comedogenic lanolin derivative",
+  "Algae Extract":"Can clog pores; common in 'natural' products",
+  "Algin":"Derived from algae; comedogenic",
+  "Butyl Stearate":"Fatty ester; clogs pores",
+  "Carrageenan":"Seaweed-derived thickener; comedogenic",
+  "Cetyl Acetate":"Waxy ester; can clog pores",
+  "Cetearyl Alcohol":"Comedogenic when combined with Ceteareth-20",
+  "Ceteareth 20":"Pore-clogging emulsifier",
+  "Chondrus Crispus":"Irish Moss / Carrageenan; comedogenic",
+  "Irish Moss":"Another name for Chondrus Crispus; comedogenic",
+  "Chlorella":"Algae-derived; clogs pores",
+  "Coal Tar":"Highly comedogenic and a known carcinogen",
+  "Cocoa Butter":"Very high comedogenic rating",
+  "Coconut Alkanes":"Coconut-derived; comedogenic",
+  "Coconut Butter":"Comedogenic",
+  "Coconut Oil":"Very high comedogenic rating",
+  "Colloidal Sulfur":"Can clog pores",
+  "Cotton Seed Oil":"Comedogenic oil",
+  "D&C Red 17":"Synthetic dye; comedogenic",
+  "D&C Red 21":"Synthetic dye; comedogenic",
+  "D&C Red 3":"Synthetic dye; comedogenic",
+  "D&C Red 30":"Synthetic dye; comedogenic",
+  "D&C Red 36":"Synthetic dye; comedogenic",
+  "Decyl Oleate":"Fatty ester; comedogenic",
+  "Dioctyl Succinate":"Emollient; pore-clogging",
+  "Disodium Monooleamido PEG 2-Sulfosuccinate":"Surfactant; comedogenic",
+  "Ethoxylated Lanolin":"Lanolin derivative; comedogenic",
+  "Ethylhexyl Palmitate":"Very common; highly comedogenic ester",
+  "Glyceryl Stearate SE":"Self-emulsifying form; comedogenic",
+  "Glyceryl-3 Diisostearate":"Comedogenic emollient",
+  "Hexadecyl Alcohol":"Fatty alcohol; can clog pores",
+  "Hydrogenated Vegetable Oil":"Processed oils; comedogenic",
+  "Isocetyl Alcohol":"Fatty alcohol; comedogenic",
+  "Isocetyl Stearate":"Comedogenic ester",
+  "Isodecyl Oleate":"Fatty ester; pore-clogging",
+  "Isopropyl Isostearate":"Highly comedogenic",
+  "Isopropyl Linolate":"Comedogenic",
+  "Isopropyl Myristate":"One of the most comedogenic ingredients",
+  "Isopropyl Palmitate":"Very common; highly comedogenic",
+  "Isostearyl Isostearate":"Comedogenic ester",
+  "Isostearyl Neopentanoate":"Comedogenic emollient",
+  "Kelp":"Seaweed-derived; comedogenic",
+  "Laminaria Digitata Extract":"Seaweed extract; comedogenic",
+  "Laminaria Saccharina Extract":"Seaweed extract; comedogenic",
+  "Laureth-23":"Comedogenic surfactant",
+  "Laureth-4":"Highly comedogenic emulsifier",
+  "Lauric Acid":"Found in coconut oil; comedogenic",
+  "Mink Oil":"Animal-derived oil; comedogenic",
+  "Myristic Acid":"Fatty acid; comedogenic",
+  "Myristyl Lactate":"Comedogenic ester",
+  "Myristyl Myristate":"Highly comedogenic",
+  "Octyl Palmitate":"Common emollient; highly comedogenic",
+  "Octyl Stearate":"Comedogenic ester",
+  "Oleth-3":"Comedogenic emulsifier",
+  "Oleyl Alcohol":"Fatty alcohol; can clog pores",
+  "PEG 16 Lanolin":"Lanolin derivative; comedogenic",
+  "PEG 200 Dilaurate":"Comedogenic PEG compound",
+  "PEG 8 Stearate":"Comedogenic PEG compound",
+  "PG Monostearate":"Propylene glycol ester; comedogenic",
+  "PPG 2 Myristyl Propionate":"Comedogenic",
+  "Plankton":"Marine-derived; comedogenic",
+  "Polyglyceryl-3 Diisostearate":"Comedogenic emulsifier",
+  "Potassium Chloride":"Can clog pores in some formulations",
+  "Propylene Glycol Monostearate":"Comedogenic emulsifier",
+  "Red Algae":"Seaweed-derived; comedogenic",
+  "Seaweed":"Common in 'natural' products; comedogenic",
+  "Shark Liver Oil":"Comedogenic (squalane is safe; squalene is not)",
+  "Squalene":"Comedogenic — not to be confused with safe squalane",
+  "Shea Butter":"Comedogenic for acne-prone skin",
+  "Sodium Laureth Sulfate":"SLES; comedogenic surfactant",
+  "Sodium Lauryl Sulfate":"SLS; highly comedogenic and irritating",
+  "Solulan 16":"Lanolin derivative; comedogenic",
+  "Sorbitan Oleate":"Comedogenic emulsifier",
+  "Soybean Oil":"High oleic acid; comedogenic",
+  "Spirulina":"Algae; comedogenic",
+  "Steareth 10":"Comedogenic emulsifier",
+  "Stearic Acid Tea":"TEA-stearate; comedogenic",
+  "Stearyl Heptanoate":"Comedogenic ester",
+  "Sulfated Castor Oil":"Processed castor oil; comedogenic",
+  "Sulfated Jojoba Oil":"Processed jojoba; comedogenic",
+  "Wheat Germ Glyceride":"Comedogenic",
+  "Wheat Germ Oil":"High oleic acid; comedogenic",
+  "Xylene":"Solvent; comedogenic"
+};
+
+// ── ACNE-SAFE ALTERNATIVES (sourced from Emme Diane) ────────────────────────
+const ALTERNATIVES = {
+  "Blush": [
+    "Alima Pure Loose Mineral Blush",
+    "auNaturale Pure Powder Blush",
+    "bareMinerals Loose Powder Blush",
+    "Chantecaille Cheek Gelee",
+    "Illuminare Perfect Color Mineral Blush",
+    "me Mineral Essence Blush",
+    "Maybelline Fit Me Blush",
+    "Maybelline Sunkisser Multi-use Blendable Liquid Blush",
+    "Mineral Hygienics Mineral Blush",
+    "Mineralogie Duo Pressed Blush Compact",
+    "Rare Beauty Soft Pinch Liquid Blush",
+  ],
+  "Bronzer": [
+    "Alima Pure Bronzer",
+    "Armani Beauty Luminous Silk Creamy Bronzing Powder",
+    "bareMinerals All-Over Face Color (Warmth, Faux Tan, Glee)",
+    "me Mineral Essence Bronzers",
+    "Mineral Hygienics Cool Kiss / Warm Kiss Mineral Bronzer",
+    "Rare Beauty Soft Pinch Liquid Contour",
+    "Rare Beauty Warm Wishes Effortless Bronzer Sticks",
+    "Youngblood Defining Bronzer (Soleil shade ONLY)",
+  ],
+  "Concealer": [
+    "bareMinerals Broad Spectrum Concealer",
+    "Charlotte Tilbury Airbrush Flawless Blur Concealer",
+    "E.l.f. Hydrating Camo Concealer",
+    "E.l.f. Flawless Brightening Concealer",
+    "L'Oreal True Match Radiant Serum Concealer",
+    "Maybelline Super Stay Active Wear Concealer",
+    "Maybelline Super Stay Under-Eye Concealer",
+    "Mineral Hygienics Multi-Tasker Concealer",
+    "NYX Can't Stop Won't Stop Contour Concealer",
+    "Urban Decay Stay Naked Correcting Concealer",
+  ],
+  "Foundation (liquid)": [
+    "Chanel Les Beiges Water-Fresh Tint",
+    "Dermablend Flawless Creator Foundation",
+    "E.l.f. Flawless Finish Foundation",
+    "E.l.f. Soft Glam Satin Foundation",
+    "Fenty Pro Filt'r Soft Matte Longwear Foundation",
+    "KVD Good Apple Full-Coverage Transfer-Proof Foundation",
+    "Lancome Teint Idole Ultra Long Wear Foundation",
+    "L'oreal Infallible Fresh Wear 24HR Foundation",
+    "Maybelline Superstay Full Coverage Foundation",
+    "NYX Can't Stop Won't Stop Foundation",
+    "Rare Beauty Liquid Touch Weightless Foundation",
+    "Tarte Amazonian Clay 16-Hour Full Coverage Foundation",
+  ],
+  "Primer": [
+    "Bare Minerals Prime Time Original Pore Minimizing Primer",
+    "Benefit POREfessional Pore Minimizing Primer",
+    "Dermablend Poresaver Matte Makeup Primer",
+    "E.l.f. Poreless Putty Primer",
+    "E.l.f. Matte Putty Primer",
+    "E.l.f. Mineral Infused Face Primer",
+    "Fenty Pro Filt'r Mattifying Primer",
+    "Hourglass Vanish Airbrush Primer",
+    "Makeup Forever Step 1 Pore Minimizer Primer",
+    "Makeup Forever Step 1 Shine Control Primer",
+    "Maybelline Baby Skin Instant Pore Eraser",
+    "NYX Pore Filler Primer",
+    "Smashbox The Original Photo Finish Smooth & Blur Oil-Free Primer",
+  ],
+  "Setting powder": [
+    "auNaturale Pore Minimizing Finishing Powder",
+    "bareMinerals Mineral Veil",
+    "Bobbi Brown Sheer Finish Pressed Powder",
+    "Cover FX Perfect Pressed Setting Powder",
+    "Dermablend Loose Setting Powder",
+    "Fenty Invisimatte Blotting Powder",
+    "Fenty Pro Filt'r Instant Retouch Setting Powder",
+    "Hourglass Veil Translucent Setting Powder",
+    "Huda Beauty Easy Bake Loose Baking & Setting Powder",
+    "Make Up For Ever Ultra HD Microfinishing Loose Powder",
+    "Maybelline Fit Me Loose Finishing Powder",
+    "Mineral Hygienics Sheer Perfection Silk",
+    "NYX Can't Stop Won't Stop Setting Powder",
+    "Too Faced Peachy Perfect Mattifying Setting Powder",
+  ],
+  "Setting spray": [
+    "Charlotte Tilbury Airbrush Flawless Setting Spray",
+    "Maybelline Lasting Fix Makeup Setting Spray — Matte Finish",
+    "NYX Makeup Setting Spray — Matte",
+    "Tarte Shape Tape Stay Spray Vegan Setting Spray",
+    "Urban Decay All Nighter Waterproof Makeup Setting Spray",
+    "Urban Decay All Nighter Waterproof Matte Setting Spray",
+  ],
+  "Highlighter": [
+    "Benefit Cookie and Tickle Shimmer Finish Powder Highlighters",
+    "Cover FX Custom Enhancer Drops (Halo, Rose Gold, Candlelight, Moonlight, Sunlight)",
+    "Fenty Killawatt Freestyle Highlighter",
+    "Maybelline FACESTUDIO Master Chrome Metallic Highlighter",
+    "Maybelline FACESTUDIO Master Holographic Prismatic Highlighter",
+    "Mineral Hygienics Radiant Mineral / Glow Mineral Illuminizer",
+    "Mineralogie Loose Mineral Radiance",
+    "NYX Born To Glow Icy Highlighter Duo",
+  ],
+  "Shampoo": [
+    "ABBA Gentle Shampoo",
+    "Aveda Shampure Shampoo",
+    "Biosilk Volumizing Therapy Shampoo",
+    "Bumble and Bumble Bond-Building Repair Shampoo",
+    "Herbal Essences Passion Flower & Grapefruit Sulfate-Free Shampoo",
+    "Herbal Essences Hemp + Potent Aloe Sulfate-Free Shampoo",
+    "K18 Damage Shield pH Protective Shampoo",
+    "K18 Peptide Prep Detox Shampoo",
+    "Kerastase Discipline Sulfate-Free Smoothing Shampoo",
+    "Living Proof Full Shampoo",
+    "L'oreal EverPure Sulfate-Free Volume Shampoo",
+    "L'oreal EverPure Sulfate-Free Clarifying Shampoo",
+    "Malibu C Un Do Goo Clarifying Shampoo",
+    "Neutrogena T/Sal Therapeutic Scalp Build-Up Control Shampoo",
+    "OlaPlex No. 4C Bond Maintenance Clarifying Shampoo",
+    "Ouai Detox Shampoo",
+    "Pureology Hydrate Shampoo",
+  ],
+  "Conditioner": [
+    "JOICO Color Endure Conditioner Sulfate-Free",
+    "L'anza Healing Nourish Stimulating Conditioner",
+  ],
+  "Dry shampoo": [
+    "Batiste Dry Shampoo (Original)",
+    "Marc Anthony 2nd Day Clear Dry Shampoo",
+    "R+Co DEATH VALLEY Dry Shampoo",
+  ],
+  "Hair styling": [
+    "American Crew Hold Styling Gel",
+    "Color Wow Dream Coat Supernatural Anti-Frizz Treatment",
+    "DevaCurl Curl Frizz Free Volume Foam",
+    "Ecoco Eco Styler Krystal Styling Gel",
+    "Garnier Fructis Style Pure Clean Styling Gel",
+    "Got 2b Glued Styling Spiking Glue",
+    "It's A 10 Miracle Leave In (not the Keratin version)",
+    "Kenra Platinum Hot Spray 20",
+    "Kinky Curly Curling Custard Styling Gel",
+    "L'Oréal Paris Elnett Satin Extra Strong Hold Hairspray",
+    "Paul Mitchell Worked Up (Working Spray)",
+    "Tigi Bed Head Headrush Spray",
+  ],
+};
+
+const TIPS = {
+  "Blush":               "Powder and mineral blushes are generally the safest pick. Cream blushes often contain emollients that clog pores — always check the label even on 'clean' brands.",
+  "Bronzer":             "Stick and pressed bronzers can contain heavy waxes and esters. Loose mineral bronzers are usually the safest option for acne-prone skin.",
+  "Concealer":           "Full-coverage concealers often rely on Isopropyl Myristate or Ethylhexyl Palmitate for slip. Look for serum-based or mineral concealers instead.",
+  "Foundation (liquid)": "Even foundations labeled 'non-comedogenic' can contain pore-clogging ingredients — always verify. Mineral powder foundations are typically the safest bet.",
+  "Primer":              "Silicone-based primers (Dimethicone) are generally safe. Avoid pore-filling primers with heavy esters like Isopropyl Myristate.",
+  "Setting powder":      "Loose mineral powders are the safest option. Some pressed powders use binding agents that can clog pores.",
+  "Setting spray":       "Most setting sprays are water-based and generally safe. Still worth checking for any oils or heavy emulsifiers.",
+  "Highlighter":         "Cream and liquid highlighters carry more risk than powder. Loose mineral highlighters are the safest choice.",
+  "Shampoo":             "Hair products rinse down the face, back, and shoulders — a hidden cause of breakouts in those areas. Always rinse thoroughly.",
+  "Conditioner":         "Apply conditioner only from mid-shaft to ends — never the scalp — and rinse extremely thoroughly to avoid hairline and back breakouts.",
+  "Dry shampoo":         "Dry shampoo accumulates on the scalp and can clog follicles along the hairline. Stick to acne-safe formulas and don't overuse.",
+  "Hair styling":        "Styling products that touch the hairline or forehead can trigger breakouts. Apply carefully and keep products away from the face and neck.",
+};
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let selectedType = '';
+
+function setType(btn, type) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  if (selectedType === type) { selectedType = ''; }
+  else { btn.classList.add('active'); selectedType = type; }
+}
+
+function clearAll() {
+  document.getElementById('ingInput').value = '';
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  selectedType = '';
+  const sec = document.getElementById('resultsSection');
+  sec.style.display = 'none';
+  sec.innerHTML = '';
+}
+
+// ── MATCHING ─────────────────────────────────────────────────────────────────
+function norm(s) { return s.toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+function findCloggers(text) {
+  const items = text.split(/[,\n;]+/).map(s => s.trim()).filter(Boolean);
+  const found = [];
+  items.forEach(ing => {
+    const nIng = norm(ing);
+    for (const [clogger, note] of Object.entries(PORE_CLOGGERS)) {
+      const nC = norm(clogger);
+      if (nIng === nC || nIng.includes(nC) || (nC.includes(nIng) && nIng.length > 6)) {
+        if (!found.find(f => f.name === clogger)) found.push({ original: ing, name: clogger, note });
+      }
+    }
+  });
+  return found;
+}
+
+// ── ICONS ────────────────────────────────────────────────────────────────────
+const ico = {
+  check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  x:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  warn:  `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  bulb:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>`,
+};
+
+// ── MAIN ─────────────────────────────────────────────────────────────────────
+function runCheck() {
+  const raw = document.getElementById('ingInput').value.trim();
+  if (!raw) { document.getElementById('ingInput').focus(); return; }
+
+  const found = findCloggers(raw);
+  const sec = document.getElementById('resultsSection');
+  sec.style.display = 'block';
+
+  if (found.length === 0) {
+    sec.innerHTML = `
+      <div class="alert alert-success">
+        <div class="alert-header">
+          ${ico.check}
+          <div><strong>No pore-clogging ingredients detected.</strong><br>This product looks acne-safe based on the Face Reality list.</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const pl = found.length === 1 ? 'ingredient' : 'ingredients';
+
+  const flagHTML = `
+    <div class="alert alert-danger">
+      <div class="alert-header" style="margin-bottom:10px">
+        ${ico.warn}
+        <div class="flag-count">${found.length} pore-clogging ${pl} found</div>
+      </div>
+      <ul class="flag-list">
+        ${found.map(f => `
+          <li class="flag-item">
+            <span class="flag-x">${ico.x}</span>
+            <div>
+              <div class="flag-name">${f.name}</div>
+              ${f.original.toLowerCase() !== f.name.toLowerCase() ? `<div class="flag-as">Listed as: ${f.original}</div>` : ''}
+              <div class="flag-note">${f.note}</div>
+            </div>
+          </li>`).join('')}
+      </ul>
+    </div>`;
+
+  let altHTML = '';
+  if (selectedType && ALTERNATIVES[selectedType]) {
+    const alts = ALTERNATIVES[selectedType];
+    const tip  = TIPS[selectedType] || '';
+    const label = selectedType.replace(' (liquid)', '');
+    altHTML = `
+      <div class="section-header">Acne-safe alternatives — ${label}</div>
+      <div class="alt-card">
+        ${alts.map(a => `
+          <div class="alt-item">
+            <span class="alt-check">${ico.check}</span>
+            <div class="alt-name">${a}</div>
+          </div>`).join('')}
+      </div>
+      <div class="source-note">Source: <a href="https://emmediane.com/blogs/skin-tips/acne-safe-makeup-list" target="_blank">Emme Diane Acne-Safe Makeup List</a> — regularly updated and vetted by estheticians. Always double-check ingredients as formulas can change.</div>
+      ${tip ? `<div class="tip-box">${ico.bulb}<span>${tip}</span></div>` : ''}`;
+  } else if (!selectedType) {
+    altHTML = `<div class="no-type-note">Select a product type above to see acne-safe alternatives sourced from Emme Diane.</div>`;
+  }
+
+  sec.innerHTML = flagHTML + altHTML;
+}
+
+document.getElementById('ingInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runCheck();
+});
+</script>
+</body>
+</html>
