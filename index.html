@@ -105,6 +105,7 @@
       <button class="type-btn" onclick="setType(this,'Conditioner')">Conditioner</button>
       <button class="type-btn" onclick="setType(this,'Dry shampoo')">Dry shampoo</button>
       <button class="type-btn" onclick="setType(this,'Hair styling')">Hair styling</button>
+      <button class="type-btn" onclick="setType(this,'Heat protectant')">Heat protectant</button>
     </div>
 
     <div class="field-label">Ingredient list</div>
@@ -123,7 +124,7 @@
 
   <footer>
     Pore-clogging list: <a href="https://facerealityskincare.com/pages/pore-clogging-ingredients" target="_blank">Face Reality Skincare</a><br>
-    Acne-safe alternatives: <a href="https://emmediane.com/blogs/skin-tips/acne-safe-makeup-list" target="_blank">Emme Diane</a> &amp; <a href="https://emmediane.com/blogs/skin-tips/acne-safe-hair-care" target="_blank">Emme Diane Hair Care</a><br>
+    Acne-safe alternatives: <a href="https://emmediane.com/blogs/skin-tips/acne-safe-makeup-list" target="_blank">Emme Diane</a> &amp; <a href="https://emmediane.com/blogs/skin-tips/acne-safe-hair-care" target="_blank">Emme Diane Hair Care</a> &amp; <a href="https://skinsort.com/products/non-comedogenic-heat-protectants" target="_blank">SkinSort</a><br>
     Always verify ingredients before use — formulas can change.
   </footer>
 </div>
@@ -345,6 +346,18 @@ const ALTERNATIVES = {
     "Marc Anthony 2nd Day Clear Dry Shampoo",
     "R+Co DEATH VALLEY Dry Shampoo",
   ],
+  "Heat protectant": [
+    "OGX Beauty Bond Protein Repair Heat Protect Spray",
+    "CHI Haircare 44 Iron Guard Thermal Protection Spray",
+    "REDKEN Quick Blowout Heat Protectant Spray",
+    "Curlsmith Miracle Shield",
+    "Living Proof Perfect Hair Day Heat Styling Spray",
+    "ghd Bodyguard Heat Protect Spray",
+    "Ion Heat Protecting Smoothing Spray",
+    "Fantasia Heat Protector Straightening Spray",
+    "Oribe Royal Blowout Heat Styling Spray",
+    "BondiBoost HG Heat Protect Spray",
+  ],
   "Hair styling": [
     "American Crew Hold Styling Gel",
     "Color Wow Dream Coat Supernatural Anti-Frizz Treatment",
@@ -373,6 +386,7 @@ const TIPS = {
   "Shampoo":             "Hair products rinse down the face, back, and shoulders — a hidden cause of breakouts in those areas. Always rinse thoroughly.",
   "Conditioner":         "Apply conditioner only from mid-shaft to ends — never the scalp — and rinse extremely thoroughly to avoid hairline and back breakouts.",
   "Dry shampoo":         "Dry shampoo accumulates on the scalp and can clog follicles along the hairline. Stick to acne-safe formulas and don't overuse.",
+  "Heat protectant":     "Heat protectants often run down the neck and shoulders during styling — a hidden cause of back and chest breakouts. Apply to hair only and keep away from the hairline and face.",
   "Hair styling":        "Styling products that touch the hairline or forehead can trigger breakouts. Apply carefully and keep products away from the face and neck.",
 };
 
@@ -475,7 +489,7 @@ function runCheck() {
             <div class="alt-name">${a}</div>
           </div>`).join('')}
       </div>
-      <div class="source-note">Source: <a href="https://emmediane.com/blogs/skin-tips/acne-safe-makeup-list" target="_blank">Emme Diane Acne-Safe Makeup List</a> — regularly updated and vetted by estheticians. Always double-check ingredients as formulas can change.</div>
+      <div class="source-note">Source: ${selectedType === 'Heat protectant' ? `<a href="https://skinsort.com/products/non-comedogenic-heat-protectants" target="_blank">SkinSort Non-Comedogenic Heat Protectants</a>` : `<a href="${selectedType === 'Shampoo' || selectedType === 'Conditioner' || selectedType === 'Dry shampoo' || selectedType === 'Hair styling' ? 'https://emmediane.com/blogs/skin-tips/acne-safe-hair-care' : 'https://emmediane.com/blogs/skin-tips/acne-safe-makeup-list'}" target="_blank">Emme Diane Acne-Safe ${selectedType === 'Shampoo' || selectedType === 'Conditioner' || selectedType === 'Dry shampoo' || selectedType === 'Hair styling' ? 'Hair Care' : 'Makeup'} List</a>`} — always double-check ingredients as formulas can change.</div>
       ${tip ? `<div class="tip-box">${ico.bulb}<span>${tip}</span></div>` : ''}`;
   } else if (!selectedType) {
     altHTML = `<div class="no-type-note">Select a product type above to see acne-safe alternatives sourced from Emme Diane.</div>`;
